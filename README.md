@@ -1,29 +1,150 @@
-# OTTO – Multi-Objective Recommender System
+OTTO – Multi-Objective Recommender System
+A session-based recommendation system designed to predict users' next interactions on the OTTO e-commerce platform.
 
-Pipeline de recommandation multi-objectif (prédiction des `clicks`, `carts` et `orders` par session) basé sur une matrice de co-visitation calculée en streaming (`build_covis_streamed`), combinée à la récence de session et à un repli (*fallback*).
+The project implements a multi-objective recommendation pipeline that generates personalized Top-20 recommendations for three interaction types: clicks, carts, and orders.
 
-## Architecture du pipeline
+The system is based on a co-visitation matrix approach, combining historical session interactions, item-to-item relationships, session recency, and fallback recommendations.
 
-1. **Entrées (`otto_parquet/`)** : chargement des données d'entraînement (`train.parquet`, 2.1G) et de test (`test.parquet`, 74M) depuis Google Drive (`/content/drive/MyDrive/otto_project/`).
-2. **Construction des matrices de co-visitation (`artifacts/`)** :
-   - Calcul en streaming via `build_covis_streamed` pour éviter la saturation mémoire.
-   - Sauvegarde des artefacts : `covis_val.pkl` (186M) et `covis_full.pkl` (187M, ~1h34 de calcul).
-3. **Génération des prédictions (Top-20)** : combinaison de l'historique récent de la session, des voisins de co-visitation et d'un *fallback* pour produire 20 `aid` par `session_type` (`_clicks`, `_carts`, `_orders`).
-4. **Export & Évaluation** : génération de `submission.csv` (783M, 5 015 410 lignes incluant l'en-tête) et évaluation sur Kaggle.
+The main objective is to build an efficient and scalable recommendation pipeline while managing the memory constraints associated with large-scale e-commerce datasets.
+Project Overview
+In the OTTO Recommender System challenge, the goal is to predict the items a user is likely to interact with next, based on their recent session activity.
 
-![Organisation des artefacts sur Google Drive](assets/drive_artifacts.png)
+Each session can contain different types of interactions:
+- Clicks: Items viewed by the user.
+- Carts: Items added to the shopping cart.
+- Orders: Items purchased by the user.
+The system generates up to 20 recommended items for each session and interaction type.
 
-## Résultats
+The final predictions are formatted according to the Kaggle competition requirements.
+Architecture
+The recommendation pipeline consists of four main stages.
+1. Data Loading
+The training and test datasets are stored in Parquet format and loaded from Google Drive.
 
-| Évaluation | Score global / métrique | Détails |
-| :--- | :--- | :--- |
-| **Validation locale** | **Weighted Recall@20 : `0.63479`** | `clicks = 0.46207`, `carts = 0.47306`, `orders = 0.74444` |
-| **Kaggle Public Score** | **`0.55494`** | Soumission `submission.csv` (`Complete (after deadline)`) |
-| **Kaggle Private Score** | **`0.55489`** | Écart très faible avec le score public |
+Dataset location:
+/content/drive/MyDrive/otto_project/
 
-![Résultats de soumission sur Kaggle](assets/kaggle_submission_score.png)
+Input files:
+File	Description
+train.parquet	Historical user interaction data
+test.parquet	Sessions used to generate recommendations
 
-## Limites et pistes d'amélioration
 
-- Modèle baseline de co-visitation sans étape de *reranking* supervisé (ex. LightGBM / CatBoost).
-- Matrices distinctes par type d'action (`clicks`, `carts`, `orders`) et pondération temporelle plus fine à explorer.
+The Parquet format allows efficient storage and processing of large datasets.
+2. Co-visitation Matrix Construction
+The recommendation system relies on item co-visitation statistics.
+
+A co-visitation matrix captures relationships between items that frequently appear together within user sessions.
+
+The matrix is constructed using the custom function:
+build_covis_streamed()
+
+
+A streaming-based approach is used to process the data progressively and reduce memory consumption.
+
+This strategy is particularly important when working with large datasets that cannot be comfortably loaded and processed entirely in memory.
+
+The generated matrices are saved as reusable artifacts:
+Artifact	Description
+covis_val.pkl	Co-visitation matrix used for local validation
+covis_full.pkl	Co-visitation matrix computed using the full training dataset
+
+
+The full matrix required approximately 1 hour and 34 minutes to compute.
+3. Recommendation Generation
+For each session, the system combines several sources of information:
+- Recent items from the user's session history.
+- Items frequently co-visited with historical items.
+- Session recency to prioritize recent interactions.
+- Fallback recommendations when the available candidates are insufficient.
+The candidate generation process produces recommendations for the three prediction targets:
+clicks
+carts
+orders
+
+Each session and interaction type receives a list of up to 20 recommended item IDs (aid).
+4. Submission and Evaluation
+The generated recommendations are exported into the final submission file:
+submission.csv
+
+The file contains the predictions for all test sessions and interaction types, following the required Kaggle submission format.
+
+The submission contains:
+- 5,015,410 rows, including the header.
+- Approximately 783 MB of data.
+The final predictions are evaluated using the competition's weighted Recall@20 metric.
+Results
+The system was evaluated using both local validation and the Kaggle leaderboard.
+Local Validation
+Metric	Recall@20
+Clicks	0.46207
+Carts	0.47306
+Orders	0.74444
+Weighted Recall@20	0.63479
+
+
+The local validation results show that the system performs particularly well on purchase-related interactions, while clicks and cart additions remain more challenging prediction tasks.
+Kaggle Evaluation
+Evaluation	Score
+Public Leaderboard	0.55494
+Private Leaderboard	0.55489
+
+
+The final submission achieved a Public Score of 0.55494 and a Private Score of 0.55489.
+
+The very small difference between the public and private scores indicates consistent performance across the two evaluation subsets.
+
+The submission was recorded on Kaggle with the status:
+
+Complete (after deadline)
+Visual Results
+Pipeline Artifacts on Google Drive
+The following image illustrates the organization of the generated artifacts and datasets on Google Drive.
+
+Kaggle Submission Results
+The following screenshot presents the final evaluation results obtained on Kaggle.
+
+Technologies Used
+Technology	Purpose
+Python	Main programming language
+Pandas	Data manipulation
+NumPy	Numerical operations
+PyArrow / Parquet	Efficient data storage and loading
+Google Colab	Development and execution environment
+Google Drive	Dataset and artifact storage
+Kaggle	Competition evaluation
+
+
+Limitations and Future Improvements
+Although the co-visitation baseline achieved competitive results, several improvements could further enhance recommendation quality.
+Current Limitations
+- The system relies primarily on statistical co-visitation relationships.
+- No supervised reranking model is currently implemented.
+- The recommendation strategy uses a relatively simple combination of historical items, co-visitation candidates, and fallback recommendations.
+- The temporal weighting strategy could be refined to better capture changes in user interests.
+Future Improvements
+Possible extensions include:
+- Supervised Reranking: Introduce LightGBM or CatBoost to rank candidate items using session-level features.
+- Action-Specific Co-visitation: Build separate co-visitation matrices for clicks, carts, and orders.
+- Temporal Weighting: Apply more sophisticated time-decay strategies to prioritize recent interactions.
+- Feature Engineering: Incorporate additional behavioral features, such as interaction frequency and session patterns.
+- Candidate Optimization: Improve candidate generation to increase recommendation diversity and relevance.
+These improvements could help bridge the gap between the local validation score and the final Kaggle leaderboard performance.
+Key Takeaways
+This project provided practical experience in:
+- Building a session-based recommendation system.
+- Working with large-scale e-commerce interaction data.
+- Implementing memory-efficient data processing.
+- Constructing item co-visitation matrices.
+- Designing a multi-objective recommendation pipeline.
+- Generating large-scale Top-20 predictions.
+- Evaluating recommendation quality using Recall@20.
+- Preparing and submitting predictions to Kaggle.
+The project demonstrates how a statistical recommendation baseline can be developed into a complete and scalable pipeline, from raw interaction data to final competition submission.
+Repository
+GitHub Repository:
+otto-recommender-system
+
+Competition:
+OTTO – Multi-Objective Recommender System
+Note: The datasets and generated artifacts are stored separately on Google Drive due to their large size and are not included directly in the GitHub repository.
