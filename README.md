@@ -65,3 +65,33 @@ The pipeline is organized into four main stages leading to submission and evalua
        │   submission.csv             │
        │   Kaggle Evaluation          │
        └──────────────────────────────┘
+````
+
+
+---
+
+## Results
+
+### Local Validation
+
+Evaluated on the local validation split using **Weighted Recall@20**:
+
+| Target | Weight | Recall@20 |
+| :--- | :---: | :---: |
+| Clicks | `0.10` | `0.46207` |
+| Carts | `0.30` | `0.47306` |
+| Orders | `0.60` | `0.74444` |
+| **Weighted Overall** | **`1.00`** | **`0.63479`** |
+
+### Kaggle Leaderboard Evaluation
+
+| Metric | Score | Notes |
+| :--- | :---: | :--- |
+| **Public Score** | **`0.55494`** | Late submission (`submission.csv` — `Complete (after deadline)`) |
+| **Private Score** | **`0.55489`** | High consistency with Public Score (`Δ = 0.00005`) |
+
+### Key Takeaways from Results
+
+- **High Orders Recall (`0.74444`)**: Combining session recency (reverse chronological items) with co-visitation candidates captures repeat views and cart-to-order conversions effectively.
+- **Public vs. Private Stability**: A difference of only `0.00005` between the Public Score (`0.55494`) and Private Score (`0.55489`) indicates reliable generalization without overfitting.
+- **Local vs. Kaggle Gap (`0.63479` vs. `~0.555`)**: Expected on OTTO due to test session truncation points, distribution shifts, and the use of a single co-visitation baseline without a supervised second-stage reranker.
