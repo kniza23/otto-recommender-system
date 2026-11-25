@@ -1,0 +1,27 @@
+# Données brutes et soumissions volumineuses
+*.parquet
+*.pkl
+*.csv
+*.jsonl
+*.zip
+*.tar
+*.gz
+submission.csv
+
+# Dossiers de données / artefacts / cache
+otto_parquet/
+artifacts/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Environnements et fichiers système
+.env
+.venv/
+venv/
+.DS_Store
+Thumbs.db
