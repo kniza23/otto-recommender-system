@@ -104,3 +104,9 @@ Evaluated on the local validation split using **Weighted Recall@20**:
 - **Languages & Libraries**: `Python`, `Pandas`, `NumPy`, `PyArrow`
 - **Data & Artifacts**: `Parquet` (`train.parquet`, `test.parquet`), `Pickle` (`covis_val.pkl`, `covis_full.pkl`), `CSV` (`submission.csv`)
 - **Platforms & Tools**: `Google Colab`, `Google Drive`, `Kaggle`, `GitHub`
+
+
+## Competition & Links
+
+- **Kaggle Competition**: [OTTO – Multi-Objective Recommender System](https://www.kaggle.com/c/otto-recommender-system)
+- **Kaggle Profile**: [kenza Bousbaa](https://www.kaggle.com/kenzabousbaa)
